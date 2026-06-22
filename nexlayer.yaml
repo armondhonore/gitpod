@@ -1,0 +1,10 @@
+application:
+  name: gitpod
+  pods:
+  - name: app
+    image: gitpod/workspace-full:latest
+    path: /
+    servicePorts:
+    - 3000
+    vars:
+      GITPOD_DOMAIN: relaxed-weasel-gitpod.cloud.nexlayer.ai
