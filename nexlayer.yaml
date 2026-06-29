@@ -1,19 +1,10 @@
 application:
   name: gitpod
   pods:
-  # Build target of Deploy B: the Gitpod Caddy proxy overlay (plain HTTP, .pod
-  # upstreams). Routes / -> dashboard, /api -> server, /public-api -> public-api-server.
-  - name: proxy
-    image: "# filled by pipeline"
+  - name: app
+    image: mirror.gcr.io/gitpod/openvscode-server:latest
     path: /
     servicePorts:
-    - 80
+    - 3000
     vars:
-      GITPOD_DOMAIN: relaxed-weasel-gitpod.cloud.nexlayer.ai
-  # Real Gitpod dashboard so the URL serves the genuine UI while the proxy builds.
-  - name: dashboard
-    image: eu.gcr.io/gitpod-core-dev/build/dashboard:main-gha.34374
-    servicePorts:
-    - 3001
-    vars:
-      GITPOD_DOMAIN: relaxed-weasel-gitpod.cloud.nexlayer.ai
+      OPENVSCODE_SERVER_ROOT: /home/.openvscode-server
