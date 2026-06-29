@@ -1,10 +1,52 @@
 application:
   name: gitpod
   pods:
-  - name: app
-    image: gitpod/openvscode-server:latest
+  # Gitpod server (main Node API). Built from the root Dockerfile (config.json +
+  # auth PKI + admin creds baked, migrations on boot). Build target of Deploy A.
+  - name: server
+    image: "# filled by pipeline"
     path: /
     servicePorts:
     - 3000
+    - 3001
     vars:
-      OPENVSCODE_SERVER_ROOT: /home/.openvscode-server
+      GITPOD_DOMAIN: relaxed-weasel-gitpod.cloud.nexlayer.ai
+      DATABASE_TYPE: in-cluster
+      DB_HOST: gitpod-db.pod
+      DB_PORT: "3306"
+      DB_USERNAME: gitpod
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_ENCRYPTION_KEYS: '[{"name":"general","version":1,"primary":true,"material":"4uGh1q8y2DYryJwrVMHs0kWXJlqvHWWt/KJuNi04edI="}]'
+      SPICEDB_ADDRESS: spicedb.pod:50051
+      SPICEDB_PRESHARED_KEY: ${SPICEDB_PRESHARED_KEY}
+      NODE_ENV: production
+
+  # Real Gitpod dashboard (React UI) — self-contained published image, serves :80.
+  - name: dashboard
+    image: eu.gcr.io/gitpod-core-dev/build/dashboard:main-gha.34374
+    servicePorts:
+    - 3001
+    vars:
+      GITPOD_DOMAIN: relaxed-weasel-gitpod.cloud.nexlayer.ai
+
+  # MySQL 8.0.33 — Gitpod application database.
+  - name: gitpod-db
+    image: mirror.gcr.io/library/mysql:8.0.33
+    servicePorts:
+    - 3306
+    vars:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: gitpod
+      MYSQL_USER: gitpod
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_AUTHENTICATION_PLUGIN: mysql_native_password
+    volumes:
+    - name: gitpod-db-data
+      mountPath: /var/lib/mysql
+      size: 10Gi
+
+  # Redis — Gitpod session/pubsub cache (no auth, ephemeral).
+  - name: redis
+    image: mirror.gcr.io/library/redis:7-alpine
+    servicePorts:
+    - 6379
