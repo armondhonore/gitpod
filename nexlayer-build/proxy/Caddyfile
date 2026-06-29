@@ -114,9 +114,9 @@
 		}
 	}
 
-	# Everything else → dashboard (static React UI on container port 80).
+	# Everything else → dashboard (static React UI; container listens on :80).
 	handle {
-		reverse_proxy dashboard.pod:3001 {
+		reverse_proxy dashboard.pod:80 {
 			import upstream_connection
 		}
 	}
