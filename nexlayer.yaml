@@ -2,7 +2,7 @@ application:
   name: gitpod
   pods:
   - name: app
-    image: gitpod/workspace-full:latest
+    image: mirror.gcr.io/gitpod/workspace-full:latest
     path: /
     servicePorts:
     - 3000
