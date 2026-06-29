@@ -2,9 +2,9 @@ application:
   name: gitpod
   pods:
   - name: app
-    image: mirror.gcr.io/gitpod/workspace-full:latest
+    image: gitpod/openvscode-server:latest
     path: /
     servicePorts:
     - 3000
     vars:
-      GITPOD_DOMAIN: relaxed-weasel-gitpod.cloud.nexlayer.ai
+      OPENVSCODE_SERVER_ROOT: /home/.openvscode-server
