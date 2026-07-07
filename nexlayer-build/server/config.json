@@ -1,0 +1,115 @@
+{
+  "version": "main-gha.34374",
+  "hostUrl": "https://relaxed-weasel-gitpod.cloud.nexlayer.ai",
+  "installationShortname": "default",
+  "devBranch": "",
+  "insecureNoDomain": false,
+  "license": "",
+  "definitelyGpDisabled": true,
+  "enableLocalApp": true,
+  "disableDynamicAuthProviderLogin": false,
+  "maxEnvvarPerUserCount": 4048,
+  "maxConcurrentPrebuildsPerRef": 10,
+  "makeNewUsersAdmin": false,
+  "defaultBaseImageRegistryWhitelist": [],
+  "runDbDeleter": true,
+  "contentServiceAddr": "content-service.pod:8080",
+  "usageServiceAddr": "usage.pod:9001",
+  "ideServiceAddr": "ide-service.pod:9001",
+  "maximumEventLoopLag": 0.35,
+  "vsxRegistryUrl": "https://open-vsx.org",
+  "stripeSecretsFile": "/stripe-secret/apikeys",
+  "stripeConfigFile": "",
+  "enablePayment": false,
+  "linkedInSecretsFile": "/linkedin-secret/linkedin",
+  "patSigningKeyFile": "/secrets/personal-access-token-signing-key/signing-key",
+  "auth": {
+    "pki": {
+      "signing": {
+        "id": "0001",
+        "privateKeyPath": "/secrets/auth-pki/signing/tls.key",
+        "publicKeyPath": "/secrets/auth-pki/signing/tls.crt"
+      },
+      "validating": []
+    },
+    "session": {
+      "lifetimeSeconds": 604800,
+      "issuer": "https://relaxed-weasel-gitpod.cloud.nexlayer.ai",
+      "cookie": {
+        "name": "_relaxed_weasel_gitpod_cloud_nexlayer_ai_jwt2_",
+        "maxAge": 604800,
+        "sameSite": "lax",
+        "secure": true,
+        "httpOnly": true
+      }
+    }
+  },
+  "isDedicatedInstallation": false,
+  "workspaceHeartbeat": { "intervalSeconds": 60, "timeoutSeconds": 300 },
+  "workspaceDefaults": {
+    "workspaceImage": "eu.gcr.io/gitpod-core-dev/build/workspace-full:latest",
+    "previewFeatureFlags": [],
+    "defaultFeatureFlags": [],
+    "timeoutDefault": "36000000ms",
+    "timeoutExtended": "108000000ms"
+  },
+  "session": { "maxAgeMs": 259200000, "secret": "Important!Really-Change-This-Key!" },
+  "githubApp": {
+    "enabled": false,
+    "appId": 0,
+    "baseUrl": "",
+    "webhookSecret": "",
+    "authProviderId": "",
+    "certPath": "",
+    "marketplaceName": "",
+    "logLevel": "",
+    "certSecretName": ""
+  },
+  "workspaceGarbageCollection": {
+    "disabled": false,
+    "startDate": 0,
+    "intervalSeconds": 1800,
+    "chunkLimit": 1000,
+    "minAgeDays": 14,
+    "minAgePrebuildDays": 7,
+    "contentRetentionPeriodDays": 21,
+    "contentChunkLimit": 3000,
+    "purgeRetentionPeriodDays": 365,
+    "purgeChunkLimit": 5000
+  },
+  "completeSnapshotJob": { "disabled": false },
+  "authProviderConfigFiles": [],
+  "incrementalPrebuilds": { "repositoryPasslist": [], "commitHistory": 100 },
+  "blockNewUsers": { "enabled": false, "passlist": [] },
+  "oauthServer": { "enabled": true, "jwtSecret": "ChangeMeChangeMeChangeMe123456789" },
+  "rateLimiter": {
+    "groups": { "inWorkspaceUserAction": { "points": 10, "durationsSec": 2 } },
+    "functions": {
+      "openPort": { "group": "inWorkspaceUserAction", "points": 0 },
+      "closePort": { "group": "inWorkspaceUserAction", "points": 0 },
+      "controlAdmission": { "group": "inWorkspaceUserAction", "points": 0 },
+      "shareSnapshot": { "group": "inWorkspaceUserAction", "points": 0 }
+    }
+  },
+  "codeSync": {
+    "revLimit": 0,
+    "contentLimit": 0,
+    "resources": {}
+  },
+  "admin": { "credentialsPath": "/credentials/admin/admin.json" },
+  "adminLoginKeyFile": "",
+  "prebuildLimiter": { "*": { "limit": 100, "period": 600 } },
+  "workspaceClasses": [
+    {
+      "id": "default",
+      "category": "GENERAL PURPOSE",
+      "displayName": "Default",
+      "description": "Default workspace class",
+      "powerups": 1,
+      "isDefault": true,
+      "deprecated": false
+    }
+  ],
+  "inactivityPeriodForReposInDays": 0,
+  "redis": { "address": "redis.pod:6379" }
+}

@@ -1,10 +1,62 @@
 application:
   name: gitpod
   pods:
-  - name: app
-    image: gitpod/workspace-full:latest
+  # Caddy reverse proxy — public entry point. Custom plain-HTTP Caddyfile routing
+  # / -> dashboard.pod:80, /api/* (stripped) -> server.pod:3000, WS /api/v1 -> server,
+  # /public-api -> public-api-server. Built from the proxy overlay (nexlayer-build/proxy).
+  - name: proxy
+    image: registry.nexlayer.io/user_01kece1xyh817dwff7wnarhkxd/gitpod:19f1561ed2d
     path: /
     servicePorts:
-    - 3000
+    - 80
     vars:
       GITPOD_DOMAIN: relaxed-weasel-gitpod.cloud.nexlayer.ai
+
+  # Real Gitpod dashboard (React UI) — self-contained published image, serves :80.
+  - name: dashboard
+    image: eu.gcr.io/gitpod-core-dev/build/dashboard:main-gha.34374
+    servicePorts:
+    - 80
+    vars:
+      GITPOD_DOMAIN: relaxed-weasel-gitpod.cloud.nexlayer.ai
+
+  # Gitpod server (main Node API) — server overlay with config.json + auth PKI +
+  # admin creds baked in; runs DB migrations on boot. Backs the dashboard's /api.
+  - name: server
+    image: registry.nexlayer.io/user_01kece1xyh817dwff7wnarhkxd/gitpod:19f1557ad59
+    servicePorts:
+    - 3000
+    - 3001
+    vars:
+      GITPOD_DOMAIN: relaxed-weasel-gitpod.cloud.nexlayer.ai
+      DATABASE_TYPE: in-cluster
+      DB_HOST: gitpod-db.pod
+      DB_PORT: "3306"
+      DB_USERNAME: gitpod
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_ENCRYPTION_KEYS: '[{"name":"general","version":1,"primary":true,"material":"4uGh1q8y2DYryJwrVMHs0kWXJlqvHWWt/KJuNi04edI="}]'
+      SPICEDB_ADDRESS: spicedb.pod:50051
+      SPICEDB_PRESHARED_KEY: ${SPICEDB_PRESHARED_KEY}
+      NODE_ENV: production
+
+  # MySQL 8.0.33 — Gitpod application database. Server migrations create the schema.
+  - name: gitpod-db
+    image: mirror.gcr.io/library/mysql:8.0.33
+    servicePorts:
+    - 3306
+    vars:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: gitpod
+      MYSQL_USER: gitpod
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_AUTHENTICATION_PLUGIN: mysql_native_password
+    volumes:
+    - name: gitpod-db-data
+      mountPath: /var/lib/mysql
+      size: 10Gi
+
+  # Redis — Gitpod session/pubsub cache (no auth, ephemeral; matches in-cluster default).
+  - name: redis
+    image: mirror.gcr.io/library/redis:7-alpine
+    servicePorts:
+    - 6379

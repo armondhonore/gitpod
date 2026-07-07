@@ -1,0 +1,123 @@
+{
+	# No automatic HTTPS — Nexlayer's edge terminates TLS and forwards plain HTTP.
+	auto_https off
+	admin off
+
+	# Plugin directive ordering (subset of upstream, only the plugins we use here).
+	order gitpod.cors_origin before header
+	order gitpod.sec_websocket_key before header
+
+	servers {
+		protocols h1 h2 h2c
+	}
+}
+
+(compression) {
+	encode zstd gzip
+}
+
+(upstream_connection) {
+	lb_try_duration 1s
+}
+
+# Kubernetes / edge health-check
+:8003 {
+	respond /live 200
+	respond /ready 200
+}
+
+# Main HTTP entrypoint — Nexlayer routes the public hostname here on port 80.
+:80 {
+	# Exposed healthcheck for L7 probes.
+	handle /api/health {
+		respond 200
+	}
+
+	# gRPC public-api proxied to the server's public-api port (3001).
+	handle /public-api/gitpod.v1.* {
+		uri strip_prefix /public-api
+		import compression
+		reverse_proxy server.pod:3001 {
+			import upstream_connection
+		}
+	}
+
+	# Public API (Connect/gRPC-web) — public-api-server on 9002.
+	@public_api path /public-api*
+	handle @public_api {
+		uri strip_prefix /public-api
+		reverse_proxy public-api-server.pod:9002 {
+			import upstream_connection
+		}
+	}
+
+	# IAM endpoints handled by public-api-server.
+	@iam path /iam/*
+	handle @iam {
+		uri strip_prefix /iam
+		reverse_proxy public-api-server.pod:9002 {
+			import upstream_connection
+		}
+	}
+
+	# WebSocket Gitpod API.
+	@backend_wss path /api/gitpod /api/v1
+	handle @backend_wss {
+		gitpod.cors_origin {
+			base_domain {$GITPOD_DOMAIN}
+		}
+		gitpod.sec_websocket_key
+		uri strip_prefix /api
+		reverse_proxy server.pod:3000 {
+			import upstream_connection
+		}
+	}
+
+	# REST API + log streaming → server (3000).
+	@backend path /api/* /headless-logs/* /prebuild-logs/*
+	handle @backend {
+		gitpod.cors_origin {
+			base_domain {$GITPOD_DOMAIN}
+		}
+		uri strip_prefix /api
+		reverse_proxy server.pod:3000 {
+			import upstream_connection
+			flush_interval -1
+		}
+	}
+
+	# code-sync, browser analytics, auth + apps callbacks → server.
+	@codesync path /code-sync*
+	handle @codesync {
+		gitpod.cors_origin {
+			any_domain true
+		}
+		import compression
+		reverse_proxy server.pod:3000 {
+			import upstream_connection
+			flush_interval -1
+		}
+	}
+
+	@browser_analytics path /_analytics*
+	handle @browser_analytics {
+		reverse_proxy server.pod:3000 {
+			import upstream_connection
+		}
+	}
+
+	@to_server path /auth /auth/* /apps /apps/* /workspace-download* /headless-log-download*
+	handle @to_server {
+		import compression
+		reverse_proxy server.pod:3000 {
+			import upstream_connection
+		}
+	}
+
+	# Everything else → dashboard (static React UI; container listens on :80).
+	handle {
+		reverse_proxy dashboard.pod:80 {
+			import upstream_connection
+		}
+	}
+}
